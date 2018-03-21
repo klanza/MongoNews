@@ -29,7 +29,7 @@ app.use(bodyParser.urlencoded({
     extended: true,
 }));
 // Express.static serves public folder html/javascript
-app.use(express.static('public'));
+// app.use(express.static('public'));
 
 // Connect to the Mongo DB
 // Use the deployed database. Otherwise use the local mongoHeadlines database
@@ -98,12 +98,14 @@ app.get('/articles', function(req, res) {
 app.get('/', function(req, res) {
     db.Article.find({})
         .then(function(dbArticle) {
-            // let hbsObject = {
-            //     notes: dbArticle.Notes,
-            // };
+            let hbsObject = {
+                article: dbArticle,
+            };
+            // console.log(hbsObject);
+            console.log(hbsObject)
+            res.render('index', hbsObject);
         });
     // console.log(hbsObject);
-    res.render('index');
 });
 
 // GET route for grabbing a specific 'Article' by id
