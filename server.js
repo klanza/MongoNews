@@ -102,7 +102,7 @@ app.get('/', function(req, res) {
                 article: dbArticle,
             };
             // console.log(hbsObject);
-            console.log(hbsObject)
+            console.log(hbsObject);
             res.render('index', hbsObject);
         });
     // console.log(hbsObject);
