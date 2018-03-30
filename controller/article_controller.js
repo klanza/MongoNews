@@ -1,52 +1,17 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const logger = require('morgan');
-const mongoose = require('mongoose');
-const exphbs = require('express-handlebars');
-
-
+// Require database models for notes/articles
+const db = require('../models');
 // Packages required for scraping
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-// Require database models for notes/articles
-const db = require('./models');
 
-const PORT = process.env.PORT || 3000;
-
-// Initialize Express
-const app = express();
-
-// Middleware
-
-// Handlebars
-app.engine('handlebars', exphbs({defaultLayout: 'main'}));
-app.set('view engine', 'handlebars');
-// Morgan -- logging requests
-app.use(logger('dev'));
-// Body-parser -- form submissions for notes
-app.use(bodyParser.urlencoded({
-    extended: true,
-}));
-// Express.static serves public folder html/javascript
-app.use(express.static('public'));
-
-// Connect to the Mongo DB
-// Use the deployed database. Otherwise use the local mongoHeadlines database
-let MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost/mongoHeadlines';
-
-// Set mongoose to leverage built in JavaScript ES6 Promises
-// Connect to the Mongo DB
-mongoose.Promise = Promise;
-mongoose.connect(MONGODB_URI, {
-    // Error occurs when this is included, removing it still seems to work
-    //   useMongoClient: true
-});
+const router = express.Router();
 
 // Routes
 
 // GET route for scraping
-app.get('/scrape', function(req, res) {
+router.get('/scrape', function(req, res) {
     // Axios replaces Request package -- supports ES6 promises
     axios.get('https://www.cnet.com/news/').then(function(response) {
         // Load website, save it to similar jQuery selector for scraping
@@ -84,7 +49,7 @@ app.get('/scrape', function(req, res) {
 });
 
 // GET route for all articles in the database
-app.get('/articles', function(req, res) {
+router.get('/articles', function(req, res) {
     db.Article.find({})
         .then(function(dbArticle) {
             res.json(dbArticle);
@@ -95,7 +60,7 @@ app.get('/articles', function(req, res) {
 });
 
 // Index with 'Articles' and 'Notes'
-app.get('/', function(req, res) {
+router.get('/', function(req, res) {
     db.Article.find({})
         .then(function(dbArticle) {
             let hbsObject = {
@@ -110,7 +75,7 @@ app.get('/', function(req, res) {
 
 // GET route for grabbing a specific 'Article' by id
 // Then populates each 'Article' with its associated 'Notes'
-app.get('/articles/:id', function(req, res) {
+router.get('/articles/:id', function(req, res) {
     // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
     db.Article.findOne({_id: req.params.id})
         // ..and populate all of the notes associated with it
@@ -126,7 +91,7 @@ app.get('/articles/:id', function(req, res) {
 });
 
 // POST route for saving a specific 'Article' with its 'Note'
-app.post('/articles/:id', function(req, res) {
+router.post('/articles/:id', function(req, res) {
     // Create a new note and pass the req.body to the entry
     db.Note.create(req.body)
         .then(function(dbNote) {
@@ -145,7 +110,6 @@ app.post('/articles/:id', function(req, res) {
         });
 });
 
-// Start the server
-app.listen(PORT, function() {
-    console.log(`App running on ${PORT}.`);
-});
+  // Export routes for server.js to use.
+  module.exports = router;
+
